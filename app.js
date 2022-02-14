@@ -1,26 +1,33 @@
-const argv = require('./config/yargs').argv;
-const lugar = require('./lugar/lugar');
-const clima = require('./clima/clima');
+const { leerInput, inquirerMenu, pausa } = require("./helpers/inquirer");
+const Busquedas = require("./models/busquedas");
+require('dotenv').config();
 
-/* lugar.getLugarLatLng(argv.direccion)
-    .then(console.log)
-    .catch( err => console.error(err));
+const main = async () => {
+    let opt = '';
+    const busquedas = new Busquedas();
 
-clima.getClima(argv.latitud, argv.longitud)
-    // clima.getClima(40.419998, -3.700000)
-    .then (console.log)
-    .catch( err => console.error(err)); */
+    do {
+        opt = await inquirerMenu();
+        switch (opt) {
+            case 1:
+                const lugar = await leerInput('Ingrese una ciudad: ');
+                await busquedas.ciudad(lugar);
+                console.log('\nInformación de la ciudad\n'.green);
+                break;
+            case 2:
+                break;
+            case '0':
+                console.log('Hasta pronto!');
+                break;
+            default:
+                console.log("El comando no es reconocido");
+                break;
+        }
 
-const getInfo = async (direccion) => {
-    try {
-        const coords = await lugar.getLugarLatLng(direccion);
-        const temp = await clima.getClima(coords.lat, coords.lng);
-        return `El clima de ${coords.direccion} es de ${temp} ºC`
-    } catch (error) {
-        throw new Error(`No se pudo determinar el clima de ${direccion}`, error);
-    }
+        if (opt !== 0) {
+            await pausa();
+        }
+
+    } while (opt !== 0);
 }
-
-getInfo(argv.direccion)
-    .then(console.log)
-    .catch(console.log)
+main();
