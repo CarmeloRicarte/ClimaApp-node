@@ -1,10 +1,12 @@
+const fs = require('fs');
 const axios = require('axios');
 
 class Busquedas {
-    historial = ['Barcelona', 'Valencia', 'Madrid'];
+    historial = [];
+    dbPath = './db/database.json';
 
     constructor() {
-        // TODO: leerDB si existe
+        this.leerDB();
     }
 
     get paramsMapbox() {
@@ -13,6 +15,14 @@ class Busquedas {
             'limit': 5,
             'language': 'es'
         }
+    }
+
+    get historialCapitalizado() {
+        return this.historial.map((lugar) => {
+            let palabaras = lugar.split(' ');
+            palabaras = palabaras.map((palabra) => palabra[0].toUpperCase() + palabra.slice(1));
+            return palabaras.join(' ');
+        });
     }
 
     async ciudad(lugar = '') {
@@ -59,6 +69,34 @@ class Busquedas {
             }
         } catch (error) {
             console.log(error);
+        }
+    }
+
+    agregarHistorial(lugar = '') {
+        // Prevent duplicates
+        if (this.historial.includes(lugar.toLocaleLowerCase())) {
+            return;
+        }
+        this.historial = this.historial.splice(0, 5);
+        this.historial.unshift(lugar.toLocaleLowerCase());
+
+        // Save to DB
+        this.guardarDB();
+    }
+
+    guardarDB() {
+        const payload = {
+            historial: this.historial
+        }
+        fs.writeFileSync(this.dbPath, JSON.stringify(payload));
+    }
+
+    leerDB() {
+        if (fs.readFileSync(this.dbPath, { encoding: 'utf-8' })) {
+            const payload = JSON.parse(fs.readFileSync(this.dbPath));
+            this.historial = payload.historial;
+        } else {
+            return;
         }
     }
 }
